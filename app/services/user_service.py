@@ -104,6 +104,23 @@ class UserService:
 
         return response
 
+    def refresh(self, userId) -> BaseResponse:
+        user = self.user_repository.get_by_id(userId, RowStatus.ACTIVE.value)
+
+        if (user is None):
+            raise UserNotFoundException()
+        
+        token_response = TokenResponse(
+                        access_token = create_access_token(user.id),
+                        refresh_token = create_refresh_token(user.id)
+                    )
+
+        response = BaseResponse(
+            data = token_response,
+            message = "Tokes refreshed successfully"
+        )
+
+        return response
 
 
         

@@ -3,7 +3,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
-from app.api.dependency import get_current_user_id
+from app.api.dependency import get_access_token_user_id
 from app.schemas.chat_schemas import ChatRequest
 from app.services.chat_service import ChatService
 
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/chat", tags=["Chat"])
 def stream_chat(
     document_id: int,
     request: ChatRequest,
-    user_id: int = Depends(get_current_user_id),
+    user_id: int = Depends(get_access_token_user_id),
     db: Session = Depends(get_db)
 ):
     service = ChatService(db)
@@ -36,7 +36,7 @@ def stream_chat(
 def get_history(
     document_id: int,
     n: int = 10,
-    user_id: int = Depends(get_current_user_id),
+    user_id: int = Depends(get_access_token_user_id),
     db: Session = Depends(get_db)
 ):
     service = ChatService(db)

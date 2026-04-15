@@ -1,5 +1,5 @@
 from app.schemas.user_schemas import UserLoginRequest
-from app.api.dependency import get_current_user_id
+from app.api.dependency import get_access_token_user_id, get_refresh_token_user_id
 from app.utils.jwt_utils import decode_token
 from pydantic import EmailStr
 from app.services.user_service import UserService
@@ -22,7 +22,7 @@ def register(request: UserRegistationRequest, db: Session = Depends(get_db)):
     return service.register(request)
 
 @router.get("/profile", response_model=BaseResponse, tags=["User"])
-def get_profile(db: Session = Depends(get_db), user_id = Depends(get_current_user_id)):
+def get_profile(db: Session = Depends(get_db), user_id = Depends(get_access_token_user_id)):
     service = UserService(db)
     return service.get_profile(user_id)
 
@@ -30,3 +30,8 @@ def get_profile(db: Session = Depends(get_db), user_id = Depends(get_current_use
 def login(request: UserLoginRequest,db: Session = Depends(get_db)):
     service = UserService(db)
     return service.login(request)
+
+@router.post("/refresh", response_model=BaseResponse, tags=["User"])
+def refresh(db: Session = Depends(get_db), user_id = Depends(get_refresh_token_user_id)):
+    service = UserService(db)
+    return service.refresh(user_id)

@@ -314,13 +314,4 @@ open http://localhost:8000/docs
 
 ---
 
-## Known Limitations
-
-- **No document deletion endpoint** — orphan vectors remain in Pinecone after a document is deleted from MySQL. `EmbeddingService.delete_document_vectors()` exists and can be wired to a DELETE route.
-- **Single-user Pinecone namespace per user** — all documents for a user share one namespace. Cross-document search is possible but not exposed in the current API.
-- **PDF only** — other document types (DOCX, TXT) are not supported in the current ingestion pipeline.
-- **No password reset flow** — OTP infrastructure supports it (`operation_type` enum is extensible) but the endpoint is not implemented.
-
----
-
 *DocuVerse Backend — FastAPI / Python 3.12*

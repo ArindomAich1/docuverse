@@ -1,13 +1,13 @@
 from typing import Generator
 from sqlalchemy.orm import Session
 
+from app.utils.redis_utils import acquire_chat_lock, release_chat_lock
 from app.services.llm_service import LLMService
 from app.services.retrieval_service import RetrievalService
 from app.repositories.chat_repository import ChatRepository
 from app.models.chat_model import Chats
 from app.enums.chat_roles import ChatRoles
 import logging
-import traceback
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +38,12 @@ class ChatService:
         On any failure, both are rolled back.
         """
         full_response = ""
+        lock_token = None
+
+        lock_token = acquire_chat_lock(document_id)
+        if not lock_token:
+            yield "data: [LOCKED] Another device is currently accessing this chat. Please wait.\n\n"
+            return
 
         try:
             # ── Step 1: Persist user message ──────────────────────────────
@@ -87,10 +93,13 @@ class ChatService:
             yield "data: [DONE]\n\n"
 
         except Exception as e:
-            logger.error(f"[ChatService] stream_answer failed: {e}")
-            logger.error(traceback.format_exc())    # ← full stack trace
+            logger.error("stream_answer failed: %s", str(e), exc_info=True)
             self.db.rollback()
             yield f"data: [ERROR] {str(e)}\n\n"
+
+        finally:
+            if lock_token:
+                release_chat_lock(document_id, lock_token)
 
     def get_history(
         self,

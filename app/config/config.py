@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     # NVDIA-LLM-API
     NVDIA_API: str
 
+    # Redis
+    REDIS_URL: str
+
+
     class Config:
         env_file = ".env"
         case_sensitive = True

@@ -5,7 +5,9 @@ import time
 import requests
 from typing import Generator
 from app.config.config import settings
+import logging
 
+logger = logging.getLogger(__name__)
 
 # =============================================================================
 # MODELS — right-sized per task
@@ -67,21 +69,25 @@ def _get_headers(stream: bool) -> dict:
     }
 
 
-def _post_with_retry(
-    url: str,
-    headers: dict,
-    payload: dict,
-    stream: bool = False,
-    max_retries: int = 3
-) -> requests.Response:
-    for attempt in range(max_retries):
-        response = requests.post(url, headers=headers, json=payload, stream=stream)
-        if response.status_code == 429:
-            time.sleep(2 ** attempt)   # 1s → 2s → 4s
+RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+
+def _post_with_retry(url, headers, payload, stream=False, retries=3):
+    for attempt in range(retries):
+        response = requests.post(url, headers=headers, json=payload, stream=stream, timeout=60)
+
+        if response.status_code in RETRYABLE_STATUS_CODES:
+            wait = 2 ** attempt        # 1s, 2s, 4s
+            logger.warning(
+                "NVIDIA API returned %d. Retrying in %ds (attempt %d/%d)",
+                response.status_code, wait, attempt + 1, retries
+            )
+            time.sleep(wait)
             continue
+
         response.raise_for_status()
         return response
-    raise RuntimeError("NVIDIA API rate limit exceeded after retries")
+
+    response.raise_for_status() 
 
 
 # =============================================================================

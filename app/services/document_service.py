@@ -84,7 +84,11 @@ class DocumentService:
     def get_all_documents(self, user_id: int):
         try:
             documents = self.document_repository.get_all_by_user(user_id)
-            response = DocumentResponse.model_validate(documents, many=True)
+            
+            response = [
+                DocumentResponse.model_validate(doc, from_attributes=True)
+                for doc in documents
+            ]
             
             for doc in response:
                 doc.document_s3path = get_presigned_url(doc.document_s3path)
@@ -93,5 +97,7 @@ class DocumentService:
                 data = response,
                 message = "Documents fetched successfully"
             )
+        except AppException as e:
+            raise e
         except Exception as e:
             raise e

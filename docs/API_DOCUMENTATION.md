@@ -479,6 +479,36 @@ Base prefix: `/document`
 
 ---
 
+#### `GET /document/`
+
+> Retrieve all documents uploaded by the authenticated user.
+
+**Auth required:** ✅ Access Token
+
+**Request Body:** *(none)*
+
+**Success Response `200`:**
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "document_name": "my_document.pdf",
+      "document_s3path": "https://s3.amazonaws.com/bucket/upload/42/my_doc.pdf?X-Amz-Signature=...",
+      "created_at": "2026-04-18T12:00:00Z"
+    }
+  ],
+  "message": "Documents fetched successfully"
+}
+```
+
+**Possible Errors:** `UNAUTHORIZED (401)`, `INTERNAL_SERVER_ERROR (500)`
+
+> **Advisory:** The `document_s3path` returned in the response is a pre-signed URL that can be directly used to view the document. It is temporary and will expire based on the server configuration.
+
+---
+
 ### Chat Endpoints
 
 Base prefix: `/chat`

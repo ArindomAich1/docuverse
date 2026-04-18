@@ -1,3 +1,4 @@
+from app.schemas.document_schemas import DocumentResponse
 from sqlalchemy.orm import Session
 from app.services.embedding_service import EmbeddingService
 from app.repositories.document_chunk_repository import DocumentChunkRepository
@@ -78,4 +79,19 @@ class DocumentService:
             raise e
         except Exception as e:
             self.db.rollback()
+            raise e
+
+    def get_all_documents(self, user_id: int):
+        try:
+            documents = self.document_repository.get_all_by_user(user_id)
+            response = DocumentResponse.model_validate(documents, many=True)
+            
+            for doc in response:
+                doc.document_s3path = get_presigned_url(doc.document_s3path)
+
+            return BaseResponse(
+                data = response,
+                message = "Documents fetched successfully"
+            )
+        except Exception as e:
             raise e

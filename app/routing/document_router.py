@@ -16,4 +16,11 @@ def upload_doc(
 ):
     service = DocumentService(db)
     return service.upload_doc(user_id, request.document_path)
-    
+
+@router.get("/", response_model=BaseResponse, tags=["Document"])
+def get_all_documents(
+    user_id: int = Depends(get_access_token_user_id),
+    db: Session = Depends(get_db)
+):
+    service = DocumentService(db)
+    return service.get_all_documents(user_id)

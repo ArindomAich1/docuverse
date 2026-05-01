@@ -9,8 +9,8 @@ Built with FastAPI, Pinecone, NVIDIA NIM, and a parent-child chunking architectu
 ## What It Does
 
 - **Auth** — Email + OTP-verified registration, JWT access/refresh token lifecycle
-- **Document Ingestion** — PDF → text extraction → parent/child chunking → dense embeddings → Pinecone upsert
-- **Retrieval** — Dense vector search + FlashRank cross-encoder reranking → hydrated parent chunks
+- **Document Ingestion** — PDF → text extraction → parent/child chunking → dense & sparse embeddings → Pinecone upsert
+- **Retrieval** — Hybrid vector search (Dense + BM25) + FlashRank cross-encoder reranking → hydrated parent chunks
 - **Chat** — Query expansion → hybrid retrieval → streaming SSE response via NVIDIA NIM LLM
 - **Concurrency Safety** — Redis distributed lock per document prevents concurrent chat collisions across devices
 
@@ -23,7 +23,7 @@ User Query
     │
     ├─► Query Expansion (LLaMA 3.1 8B) — rephrase for better retrieval recall
     │
-    ├─► Pinecone Dense Search (all-MiniLM-L6-v2, top_k=20, namespace=user_id)
+    ├─► Pinecone Hybrid Search (all-MiniLM-L6-v2 + BM25, alpha=0.5, top_k=20, namespace=user_id)
     │
     ├─► FlashRank Cross-Encoder Reranking (ms-marco-MiniLM-L-12-v2, top_n=5)
     │
@@ -51,8 +51,8 @@ Sub-chunks carry a `parent_index` FK. After retrieval and reranking, the matched
 |---|---|
 | **Framework** | FastAPI + Uvicorn |
 | **Database** | MySQL + SQLAlchemy ORM |
-| **Vector Store** | Pinecone (dotproduct metric, 384-dim) |
-| **Embeddings** | `sentence-transformers/all-MiniLM-L6-v2` (local, CPU) |
+| **Vector Store** | Pinecone (dotproduct metric, 384-dim dense + sparse vectors) |
+| **Embeddings** | `sentence-transformers/all-MiniLM-L6-v2` (dense) + Pinecone `BM25Encoder` (sparse) |
 | **Reranker** | FlashRank `ms-marco-MiniLM-L-12-v2` (local, CPU) |
 | **LLM** | NVIDIA NIM — Mistral Large (generation), LLaMA 3.1 8B (query expansion) |
 | **Storage** | AWS S3 (PDF storage) |

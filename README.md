@@ -273,12 +273,6 @@ The chat endpoint returns a `text/event-stream` response. Parse `data:` prefixed
 
 ## Key Design Decisions
 
-### Dense-Only Pinecone Retrieval
-
-Sparse BM25 vectors are stored at upsert time using per-batch corpus indices (positions 0..n-1). These indices cannot be reproduced at query time without the exact same corpus, making hybrid Pinecone queries unreliable across batches. The sparse scores would be meaningless noise. Dense-only retrieval is used instead — the FlashRank cross-encoder reranker compensates for the recall gap that sparse search would have provided.
-
-**Upgrade path:** Replace `rank_bm25` with Pinecone's `BM25Encoder` (pinecone-text), which maintains a persistent vocabulary and produces stable sparse indices across batches.
-
 ### Parent-Child Chunking (Small-to-Big Retrieval)
 
 Retrieval precision and generation quality pull in opposite directions. Small chunks retrieve precisely; large chunks give the LLM enough context to answer well. The two-level split resolves this: sub-chunks handle precision at search time, parent chunks handle quality at generation time.

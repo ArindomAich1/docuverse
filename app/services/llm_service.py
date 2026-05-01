@@ -73,7 +73,7 @@ RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
 
 def _post_with_retry(url, headers, payload, stream=False, retries=3):
     for attempt in range(retries):
-        response = requests.post(url, headers=headers, json=payload, stream=stream, timeout=60)
+        response = requests.post(url, headers=headers, json=payload, stream=stream, timeout=120)
 
         if response.status_code in RETRYABLE_STATUS_CODES:
             wait = 2 ** attempt        # 1s, 2s, 4s
